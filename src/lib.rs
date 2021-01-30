@@ -8,8 +8,22 @@
 //! having to instrument every query.
 //!
 //! This is essentially a straight copy and paste from the ApolloTracing & Tracing Extensions from
-//! the core library, just modified slightly for my usecase and is very much an
-//! experiment.
+//! the core library, just modified slightly to enable metric creation and with a slightly
+//! different trace event pattern.
+//!
+//! ## Features
+//!
+//! This extension includes
+//! - Tracing (via [tracing](https://github.com/tokio-rs/tracing))
+//! - Apollo Tracing
+//! - High Level Metrics
+//!
+//! ## Reason for combining the extensions
+//!
+//! The primary reason for combining these extensions is to minimise the amount of data required to
+//! be stored per request. As an example, in order to generate the high level metrics, the Apollo Tracing data can
+//! be used. So combining all 3 made the most sense for minimising the space and
+//! computation done while processing requests.
 //!
 //! ## License
 //!
@@ -180,19 +194,16 @@ impl Extension for OpenTelemetry {
         self.traces.execute.replace(execute_span);
     }
 
-    fn execution_end(&mut self, ctx: &ExtensionContext<'_>) {
+    fn execution_end(&mut self, _ctx: &ExtensionContext<'_>) {
         self.traces
             .root
             .take()
             .and_then(|span| span.with_subscriber(|(id, d)| d.exit(id)));
+        self.traces
+            .execute
+            .take()
+            .and_then(|span| span.with_subscriber(|(id, d)| d.exit(id)));
         self.metrics.end_time = Utc::now();
-
-        if let Some(parent_span) = ctx
-            .data_opt::<OpenTelemetryConfig>()
-            .and_then(|cfg| cfg.parent.as_ref())
-        {
-            parent_span.with_subscriber(|(id, d)| d.exit(id));
-        }
     }
 
     fn resolve_start(&mut self, _ctx: &ExtensionContext<'_>, info: &ResolveInfo<'_>) {

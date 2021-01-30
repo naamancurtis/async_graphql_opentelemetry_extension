@@ -12,6 +12,7 @@ use async_graphql::QueryPathNode;
 /// The base type for initialising the extension in your application
 ///
 /// This should be attached to the schema when generating it
+#[derive(Default)]
 pub struct OpenTelemetryExtension;
 
 impl ExtensionFactory for OpenTelemetryExtension {
@@ -80,6 +81,40 @@ impl TelemetryData {
 /// Tracing extension configuration for each request.
 ///
 /// Should be injected into the GraphQL `Context`
+///
+/// # Examples
+///
+/// ```no_run
+/// use async_graphql::*;
+/// use async_graphql_telemetry_extension::{OpenTelemetryConfig, OpenTelemetryExtension};
+/// use tracing::{span, Level};
+///
+/// #[derive(SimpleObject)]
+/// struct Query {
+///     value: i32,
+/// }
+///
+/// let schema = Schema::build(Query { value: 100 }, EmptyMutation, EmptySubscription).
+///     extension(OpenTelemetryExtension)
+///     .finish();
+///
+/// let root_span = span!(
+///     parent: None,
+///     Level::INFO,
+///     "request root"
+/// );
+///
+/// tokio::task::block_in_place(|| {
+///     async move {
+///         let otel_ext = OpenTelemetryConfig::default()
+///             .parent_span(root_span)
+///             .enable_apollo_tracing(false);
+///         let request = Request::new("{ value }")
+///             .data(otel_ext);
+///         schema.execute(request).await;
+///     }
+/// });
+/// ```
 pub struct OpenTelemetryConfig {
     /// Use a span as the parent node of the entire query.
     pub parent: Option<Span>,
@@ -99,6 +134,16 @@ impl OpenTelemetryConfig {
     /// Use the provided span as the parent node of the entire query.
     pub fn parent_span(mut self, span: Span) -> Self {
         self.parent = Some(span);
+        self
+    }
+
+    /// Set this to enable/disable whether apollo tracing is returned to the client
+    ///
+    /// ## Default
+    ///
+    /// By default this is set to true
+    pub fn enable_apollo_tracing(mut self, enable: bool) -> Self {
+        self.return_tracing_data_to_client = enable;
         self
     }
 }
