@@ -52,7 +52,7 @@ mod types;
 pub use types::*;
 
 lazy_static! {
-    pub static ref HTTP_REQUESTS: Counter<u64> = {
+    static ref HTTP_REQUESTS: Counter<u64> = {
         let meter = global::meter("graphql");
         let counter = meter
             .u64_counter("graphql_requests")
@@ -60,7 +60,7 @@ lazy_static! {
             .init();
         counter
     };
-    pub static ref HTTP_REQUEST_DURATION: ValueRecorder<f64> = {
+    static ref HTTP_REQUEST_DURATION: ValueRecorder<f64> = {
         let meter = global::meter("graphql");
         let observer = meter
             .f64_value_recorder("graphql_request_duration")
@@ -68,7 +68,7 @@ lazy_static! {
             .init();
         observer
     };
-    pub static ref HTTP_REQUESTS_ERRORS: Counter<u64> = {
+    static ref HTTP_REQUESTS_ERRORS: Counter<u64> = {
         let meter = global::meter("graphql");
         let counter = meter
             .u64_counter("graphql_request_errors")
