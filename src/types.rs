@@ -12,6 +12,23 @@ use async_graphql::QueryPathNode;
 /// The base type for initialising the extension in your application
 ///
 /// This should be attached to the schema when generating it
+/// # Examples
+///
+/// ```no_run
+/// use async_graphql::*;
+/// use async_graphql_telemetry_extension::{OpenTelemetryConfig, OpenTelemetryExtension};
+/// use tracing::{span, Level};
+///
+/// #[derive(SimpleObject)]
+/// struct Query {
+///     value: i32,
+/// }
+///
+/// let schema = Schema::build(Query { value: 100 }, EmptyMutation, EmptySubscription).
+///     extension(OpenTelemetryExtension)
+///     .finish();
+/// ```
+
 #[derive(Default)]
 pub struct OpenTelemetryExtension;
 
