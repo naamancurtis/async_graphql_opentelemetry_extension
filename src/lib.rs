@@ -1,22 +1,22 @@
 //! # Async GraphQL Telemetry Extension
 //!
-//! The `Extensions` trait in `async-graphql` essentially mimics traditional
+//! The `Extensions` trait in [async-graphql](https://github.com/async-graphql/async-graphql) essentially mimics traditional
 //! middleware in HTTP servers (although arguably more powerful due to the
-//! ability to hook into various stages of the query resolution). This is a
-//! first attempt at adding in some of the Open Telemetry integrations in order
+//! ability to hook into various stages of the query resolution). This extension is an
+//! attempt at adding in some of the Open Telemetry integrations in order
 //! to handle metric and trace creation through this API, as opposed to manually
 //! having to instrument every query.
 //!
-//! This is essentially a straight copy and paste from the ApolloTracing & Tracing Extensions from
-//! the core library, just modified slightly to enable metric creation and with a slightly
-//! different trace event pattern.
+//! It is essentially a straight copy and paste from the [ApolloTracing](https://docs.rs/async-graphql/latest/async_graphql/extensions/struct.ApolloTracing.html) & [Tracing](https://docs.rs/async-graphql/latest/async_graphql/extensions/struct.Tracing.html) Extensions from
+//! the core library, just modified to enable metric creation and a slightly
+//! different span generation pattern.
 //!
 //! ## Features
 //!
 //! This extension includes
 //! - Tracing (via [tracing](https://github.com/tokio-rs/tracing))
 //! - Apollo Tracing
-//! - High Level Metrics
+//! - High Level Metrics (via [OpenTelemetry](https://github.com/open-telemetry/opentelemetry-rust/tree/main/opentelemetry))
 //!
 //! ## Reason for combining the extensions
 //!
@@ -28,7 +28,7 @@
 //! ## License
 //!
 //! Anything found within here falls under the same licenses as the main
-//! repository, which can be found here https://github.com/async-graphql/async-graphql
+//! repository, which can be found here <https://github.com/async-graphql/async-graphql>
 //!
 //! MIT or Apache version 2.0
 
