@@ -135,7 +135,7 @@ impl Extension for OpenTelemetry {
             let parse_span = span!(
                 target: TARGET,
                 parent: root,
-                Level::INFO,
+                Level::DEBUG,
                 prefix_context!("parse")
             );
 
@@ -150,7 +150,7 @@ impl Extension for OpenTelemetry {
             let validation_span = span!(
                 target: TARGET,
                 parent: parent,
-                Level::INFO,
+                Level::DEBUG,
                 prefix_context!("validation")
             );
             validation_span.with_subscriber(|(id, d)| d.enter(id));
@@ -177,7 +177,7 @@ impl Extension for OpenTelemetry {
             span!(
                 target: TARGET,
                 parent: parent,
-                Level::INFO,
+                Level::DEBUG,
                 prefix_context!("execute")
             )
         } else {
@@ -185,7 +185,7 @@ impl Extension for OpenTelemetry {
             span!(
                 target: TARGET,
                 parent: None,
-                Level::INFO,
+                Level::DEBUG,
                 prefix_context!("execute")
             )
         };
@@ -226,7 +226,7 @@ impl Extension for OpenTelemetry {
             let span = span!(
                 target: TARGET,
                 parent: parent_span,
-                Level::INFO,
+                Level::TRACE,
                 prefix_context!("field_resolver"),
                 graphql_field_id = %info.resolve_id.current,
                 graphql_path = %info.path_node,
