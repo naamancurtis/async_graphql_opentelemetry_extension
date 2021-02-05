@@ -265,7 +265,7 @@ impl Extension for OpenTelemetry {
         let resolved_values = self.metrics.resolves.len();
         let pending_values = self.fields.len();
         let time_to_error_ms = (Utc::now() - self.metrics.start_time).num_milliseconds();
-        tracing::error!(target: TARGET, error = %err.message, error.extensions = ?err.extensions, resolved_values, pending_values, %time_to_error_ms);
+        tracing::debug!(target: TARGET, error = %err.message, error.extensions = ?err.extensions, resolved_values, pending_values, %time_to_error_ms, "Found error when resolving GraphQL field");
 
         for (_, TelemetryData { span, .. }) in self.fields.iter() {
             span.with_subscriber(|(id, d)| d.exit(id));
