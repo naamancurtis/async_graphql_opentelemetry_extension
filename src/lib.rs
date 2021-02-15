@@ -43,7 +43,7 @@ use async_graphql::extensions::{Extension, ExtensionContext, ResolveInfo};
 use async_graphql::{
     value, Request, ServerError, ServerResult, ValidationResult, Value, Variables,
 };
-use async_graphql_parser::types::ExecutableDocument;
+use async_graphql::parser::types::ExecutableDocument;
 use lazy_static::lazy_static;
 use tracing::{span, Level};
 
