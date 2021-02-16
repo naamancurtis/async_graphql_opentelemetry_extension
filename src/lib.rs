@@ -40,10 +40,10 @@ use opentelemetry::{
 };
 
 use async_graphql::extensions::{Extension, ExtensionContext, ResolveInfo};
+use async_graphql::parser::types::ExecutableDocument;
 use async_graphql::{
     value, Request, ServerError, ServerResult, ValidationResult, Value, Variables,
 };
-use async_graphql::parser::types::ExecutableDocument;
 use lazy_static::lazy_static;
 use tracing::{span, Level};
 
@@ -196,11 +196,11 @@ impl Extension for OpenTelemetry {
 
     fn execution_end(&mut self, _ctx: &ExtensionContext<'_>) {
         self.traces
-            .root
+            .execute
             .take()
             .and_then(|span| span.with_subscriber(|(id, d)| d.exit(id)));
         self.traces
-            .execute
+            .root
             .take()
             .and_then(|span| span.with_subscriber(|(id, d)| d.exit(id)));
         self.metrics.end_time = Utc::now();
