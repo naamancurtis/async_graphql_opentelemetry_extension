@@ -1,19 +1,21 @@
 [package]
 name = "async_graphql_telemetry_extension"
-version = "0.1.0"
-authors = ["Naaman <naaman.the.dev@gmail.com>"]
+version = "0.2.0"
+authors = ["Naaman Curtis <naaman.the.dev@gmail.com>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-async-graphql = "^2.5"
+async-graphql = "^2.8"
 async-trait = "^0.1"
 tracing = "^0.1"
 serde = "^1.0"
-chrono = "^0.4"
 lazy_static = "^1.4"
-opentelemetry = { version = "^0.11", features = ["metrics"] }
+opentelemetry = { version = "^0.13", features = ["metrics"] }
+futures-util = { version = "^0.3", default-features = false, features = ["io"] }
+tracing-futures = { version = "^0.2", features = ["futures-03"] }
+tokio = { version = "^1.4", features = ["time"] }
 
 [dev-dependencies]
-tokio = { version = "^1.0", features = ["full"] }
+tokio = { version = "^1.4", features = ["full"] }
