@@ -15,7 +15,6 @@
 //!
 //! This extension includes
 //! - Tracing (via [tracing](https://github.com/tokio-rs/tracing))
-//! - Apollo Tracing
 //! - High Level Metrics (via [OpenTelemetry](https://github.com/open-telemetry/opentelemetry-rust/tree/main/opentelemetry))
 //!
 //! ## Reason for combining the extensions
@@ -33,7 +32,7 @@
 //! MIT or Apache version 2.0
 
 use opentelemetry::metrics::{Counter, ValueRecorder};
-use opentelemetry::{global, Key};
+use opentelemetry::{global, Key, Unit};
 
 use lazy_static::lazy_static;
 
@@ -54,7 +53,7 @@ use std::sync::Arc;
 
 lazy_static! {
     static ref REQUESTS: Counter<u64> = {
-        let meter = global::meter("async_graphql");
+        let meter = global::meter(NAME);
         let counter = meter
             .u64_counter("graphql_requests")
             .with_description("total number of HTTP requests sent to the graphQL server")
@@ -62,23 +61,24 @@ lazy_static! {
         counter
     };
     static ref SUBSCRIPTIONS: Counter<u64> = {
-        let meter = global::meter("async_graphql");
+        let meter = global::meter(NAME);
         let counter = meter
             .u64_counter("graphql_subscriptions")
             .with_description("total number of subscriptions sent to the graphQL server")
             .init();
         counter
     };
-    static ref REQUEST_DURATION: ValueRecorder<f64> = {
-        let meter = global::meter("async_graphql");
+    static ref REQUEST_DURATION: ValueRecorder<u64> = {
+        let meter = global::meter(NAME);
         let observer = meter
-            .f64_value_recorder("graphql_request_duration")
+            .u64_value_recorder("graphql_request_duration")
             .with_description("duration of successful graphql queries in milliseconds")
+            .with_unit(Unit::new("milliseconds"))
             .init();
         observer
     };
     static ref REQUEST_ERRORS: Counter<u64> = {
-        let meter = global::meter("async_graphql");
+        let meter = global::meter(NAME);
         let counter = meter
             .u64_counter("graphql_request_errors")
             .with_description(
@@ -90,6 +90,10 @@ lazy_static! {
 }
 
 const TARGET: &str = "async_graphql::graphql";
+const NAME: &str = "graphql";
+const QUERY_KEY: Key = Key::from_static_str("query_name");
+const QUERY_TYPE_KEY: Key = Key::from_static_str("query_type");
+const RETURN_TYPE_KEY: Key = Key::from_static_str("return_type");
 
 pub struct OpenTelemetry;
 pub struct OpenTelemetryExtension {
@@ -164,26 +168,36 @@ impl Extension for OpenTelemetryExtension {
         info: ResolveInfo<'_>,
         next: NextResolve<'_>,
     ) -> ServerResult<Option<Value>> {
+        let path = info.path_node.to_string();
+        let parent_type = info.parent_type.to_string();
+        let return_type = info.return_type.to_string();
         let span = span!(
             target: TARGET,
             Level::INFO,
             "field",
-            path = %info.path_node,
-            parent_type = %info.parent_type,
-            return_type = %info.return_type,
+            %path,
+            %parent_type,
+            %return_type
         );
         let result = next.run(ctx, info)
             .instrument(span)
             .map_err(|err| {
-                REQUEST_ERRORS.add(1, &[]);
+                REQUEST_ERRORS.add(1, &[QUERY_KEY.string(path.clone()), QUERY_TYPE_KEY.string(parent_type.clone()), RETURN_TYPE_KEY.string(return_type.clone())]);
                 tracing::error!(target: TARGET, error = %err.message, extensions = ?&err.extensions);
                 err
             })
             .await;
         let duration = Instant::now() - self.start;
-        // This cast should be fine, because if this request duration overflows an f64, we have
+        // This cast should be fine, because if this request duration overflows an u64, we have
         // bigger issues
-        REQUEST_DURATION.record(duration.as_millis() as f64, &[]);
+        REQUEST_DURATION.record(
+            duration.as_millis() as u64,
+            &[
+                QUERY_KEY.string(path),
+                QUERY_TYPE_KEY.string(parent_type),
+                RETURN_TYPE_KEY.string(return_type),
+            ],
+        );
         result
     }
 }
